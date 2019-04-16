@@ -61,8 +61,12 @@ endfu
 
 function! s:refreshView()
     let bufnr = expand('<bufnr>')
-    call s:systemasync("curl -X PUT -T - http://localhost:8090",
-                \ s:bufGetLines(bufnr))
+    call s:systemasync("curl -X PUT -T '" . expand('%:p') . "' http://localhost:8090", [])
+endfu
+
+function! s:delayedRefreshView()
+    let bufnr = expand('<bufnr>')
+    call s:systemasync("sleep 0.5 && curl -X PUT -T '" . expand('%:p') . "' http://localhost:8090", [])
 endfu
 
 function! s:startDaemon(initialMDLines)
@@ -174,9 +178,9 @@ if g:instant_markdown_autostart
     " # Define the autocmds "
     aug instant-markdown
         au! * <buffer>
-        au BufEnter <buffer> call s:refreshView()
+        au BufEnter <buffer> call s:delayedRefreshView()
         if g:instant_markdown_slow
-          au CursorHold,BufWrite,InsertLeave <buffer> call s:temperedRefresh()
+          au CursorHold,BufWritePost,InsertLeave <buffer> call s:temperedRefresh()
         else
           au CursorHold,CursorHoldI,CursorMoved,CursorMovedI <buffer> call s:temperedRefresh()
         endif
